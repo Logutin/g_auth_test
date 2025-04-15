@@ -27,7 +27,7 @@ cookie:
 
 # OAuth provider configuration (Add this section)
 providers:
-  - name: Google # Can be any name you like
+  - name: "Google" # Can be any name you like
     button_color: '#FD504D' # Google Red
     button_icon: 'fab fa-google' # Font Awesome icon class
     # Client ID and Secret will be read from Streamlit secrets, not placed here
