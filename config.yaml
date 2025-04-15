@@ -1,0 +1,47 @@
+# Configuration for streamlit-authenticator
+
+credentials:
+  # Usernames dictionary - MUST match keys in 'usernames' below for preauthorization
+  usernames:
+    # We will populate this later with allowed emails manually or dynamically
+    # Example (REMOVE THIS EXAMPLE LATER):
+    # jsmith:
+    #   email: jsmith@example.com
+    #   name: John Smith
+    #   password: null # Required field, but null/None for OAuth
+    testuser: # Placeholder - add your *testing* email key here
+       email: logutin@gmail.com # <-- *** REPLACE with YOUR Google email ***
+       name: Slava Logutin # <-- REPLACE with your name
+       password: null # Set password to null for OAuth
+
+  # --- IMPORTANT ---
+  # The keys under 'usernames' (e.g., 'testuser') MUST be unique identifiers.
+  # For Google Auth, the 'email' field under each key is what gets compared
+  # to the email returned by Google after login.
+  # You can choose a convention for the keys, like using the email prefix (e.g., 'jsmith').
+
+cookie:
+  expiry_days: 30          # How long the login cookie is valid (in days)
+  key: "e13d6d479452e2245f201fd29eb095a8efb83e17c1e71a872431117f1734ce8f" # CHANGE THIS to a random secret string! Generate one.
+  name: "auth_cookie"       # Name of the cookie stored in the browser
+
+preauthorized:
+  # List of emails allowed to register or log in.
+  # For Google Auth, this is the primary check.
+  # The authenticator will check if the email returned by Google
+  # exists in this list.
+  emails:
+    - logutin@gmail.com # <-- *** REPLACE with YOUR Google email ***
+    # - colleague1@example.com
+    # - colleague2@example.com
+  # Add the emails of all colleagues who should have access here.
+  # You can manage this list directly in this file for simplicity to start.
+
+# OAuth provider configuration (Add this section)
+providers:
+  - name: Google # Can be any name you like
+    button_color: '#FD504D' # Google Red
+    button_icon: 'fab fa-google' # Font Awesome icon class
+    # Client ID and Secret will be read from Streamlit secrets, not placed here
+    # The library automatically looks for GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
+    # in st.secrets if 'client_id' and 'client_secret' are omitted here.
