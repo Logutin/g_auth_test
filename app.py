@@ -26,8 +26,10 @@ if config: # Proceed only if config loaded successfully
 
         if auth_status is True:
             # --- User is Logged In ---
-            st.sidebar.write(f"Welcome, *{user_name}*!")
-            authenticator.logout("Logout", "sidebar") # Place logout button in sidebar
+            # Prioritize the 'name' returned by login, fallback to session state if needed
+            display_name = name if name else st.session_state.get('name', 'User') # Get name from handle_login result
+            st.sidebar.write(f"Welcome, *{display_name}*!")
+            authenticator.logout("Logout", "sidebar")
 
             # --- Main App Content ---
             st.title("🎈 My Super Secret App")
