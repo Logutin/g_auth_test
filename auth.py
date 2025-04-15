@@ -58,7 +58,6 @@ def initialize_authenticator(config):
             config['cookie']['name'],
             config['cookie']['key'],
             config['cookie']['expiry_days'],
-            config['preauthorized'],
             config.get('providers') # Pass the updated providers list
         )
         return authenticator
