@@ -5,16 +5,13 @@ from auth_google import initialize_authenticator, handle_auth_flow, handle_logou
 st.set_page_config(page_title="Google Auth App", layout="centered")
 
 # --- Authorization Configuration ---
-# Define the list of emails allowed to access this app
-# For simplicity, hardcoded here. Consider moving to st.secrets for better management.
-# Example using secrets.toml:
-# ALLOWED_EMAILS = st.secrets.get("authorization", {}).get("allowed_emails", [])
-ALLOWED_EMAILS = [
-    "your_google_email@example.com", # <-- *** REPLACE with YOUR Google email ***
-    "colleague1@example.com",      # <-- Add your colleagues' emails
-    "colleague2@yourcompany.com",
-    # Add all emails that should have access
-]
+# Read the list of allowed emails from secrets.toml
+# Uses .get() for safety, providing an empty list if the key/section is missing
+ALLOWED_EMAILS = st.secrets.get("authorization", {}).get("allowed_emails", [])
+# print(ALLOWED_EMAILS)
+# Add a check and warning if the list is empty (common mistake)
+if not ALLOWED_EMAILS:
+    st.warning("No allowed emails configured in secrets.toml under [authorization] -> allowed_emails. No one will be able to log in.")
 
 # --- Authentication ---
 authenticator = initialize_authenticator()
@@ -32,6 +29,7 @@ if authenticator:
 
         # **Authorization Check**
         if user_email in ALLOWED_EMAILS:
+            # print('Found!')
             # --- User is Authenticated AND Authorized ---
 
             # Display user info and logout button in sidebar
@@ -54,6 +52,7 @@ if authenticator:
 
         else:
             # --- User is Authenticated BUT NOT Authorized ---
+            # print('Not found!')
             st.error(f"Access Denied: Your email ({user_email}) is not authorized to use this application.")
             st.warning("Please contact the administrator if you believe this is an error.")
             # Log the user out immediately as they shouldn't be here
