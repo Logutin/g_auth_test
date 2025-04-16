@@ -97,9 +97,6 @@ def handle_auth_flow(authenticator):
 
         # Check connection status *after* check_authentification might have updated it
         if not st.session_state.get("connected"):
-            # --- Create Login Link Manually ---
-            try:
-        if not st.session_state.get("connected"):
             try:
                 auth_url = authenticator.get_authorization_url()
 
