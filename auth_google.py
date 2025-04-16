@@ -100,25 +100,14 @@ def handle_auth_flow(authenticator):
             try:
                 auth_url = authenticator.get_authorization_url()
 
-                # Use st.markdown with an onclick JavaScript event
-                # We keep target="_top" as a fallback/best practice
-                st.markdown(f"""
-                <a href="{auth_url}" target="_top" onclick="window.top.location.href='{auth_url}'; return false;" style="
-                    display: inline-block;
-                    padding: 0.5em 1em;
-                    color: white;
-                    background-color: #FD504D; /* Google Red */
-                    border-radius: 0.25rem;
-                    text-decoration: none;
-                    font-weight: bold;
-                ">
-                    Sign in with Google
-                </a>
-                """, unsafe_allow_html=True)
+                # --- Use st.link_button ---
+                # This component is specifically designed for navigation links
+                # that look like buttons. It might handle the iframe context better.
+                # It doesn't need target="_top" or onclick JS.
+                st.link_button("Sign in with Google", auth_url, type="primary", help="Click to sign in via your Google account")
 
             except Exception as e:
                 st.error(f"Error generating login link: {e}")
-
         # Original authenticator.login() is now replaced by the markdown above
         # authenticator.login()
 
