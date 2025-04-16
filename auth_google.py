@@ -85,15 +85,44 @@ def initialize_authenticator():
         st.stop()
         return None
 
-# --- Functions handle_auth_flow and handle_logout remain the same ---
-# (Ensure handle_auth_flow and handle_logout definitions are still present below)
 # Function to handle the login flow
 def handle_auth_flow(authenticator):
-    """Runs the authentication check and displays the login button."""
+    """
+    Runs the authentication check and displays the login button
+    (modified to use target='_top').
+    """
     if authenticator:
-        authenticator.check_authentification() # Important: Catches the redirect back from Google
-        authenticator.login() # Renders the login button if not authenticated
+        # This part remains the same - it handles the redirect *back* from Google
+        authenticator.check_authentification()
 
+        # Check connection status *after* check_authentification might have updated it
+        if not st.session_state.get("connected"):
+            # --- Create Login Link Manually ---
+            try:
+                # Get the authorization URL from the library
+                auth_url = authenticator.get_authorization_url()
+
+                # Use st.markdown to create an HTML link with target="_top"
+                # Added basic button-like styling using inline CSS for better appearance
+                st.markdown(f"""
+                <a href="{auth_url}" target="_top" style="
+                    display: inline-block;
+                    padding: 0.5em 1em;
+                    color: white;
+                    background-color: #FD504D; /* Google Red */
+                    border-radius: 0.25rem;
+                    text-decoration: none;
+                    font-weight: bold;
+                ">
+                    Sign in with Google
+                </a>
+                """, unsafe_allow_html=True)
+
+            except Exception as e:
+                st.error(f"Error generating login link: {e}")
+
+        # Original authenticator.login() is now replaced by the markdown above
+        # authenticator.login()
 
 # Function to handle logout
 def handle_logout(authenticator):
