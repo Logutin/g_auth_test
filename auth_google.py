@@ -93,7 +93,7 @@ def handle_auth_flow(authenticator):
     """
     if authenticator:
         # This part remains the same - it handles the redirect *back* from Google
-        authenticator.check_authentification()
+        # authenticator.check_authentification()
 
         # Check connection status *after* check_authentification might have updated it
         if not st.session_state.get("connected"):

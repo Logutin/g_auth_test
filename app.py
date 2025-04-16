@@ -17,6 +17,9 @@ if not ALLOWED_EMAILS:
 authenticator = initialize_authenticator()
 
 if authenticator:
+    # --- Run check on EVERY script execution ---
+    authenticator.check_authentification() # <-- ADD THIS LINE HERE
+
     # Display login button and handle authentication callbacks
     handle_auth_flow(authenticator)
 
