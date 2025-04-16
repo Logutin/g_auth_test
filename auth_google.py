@@ -1,52 +1,92 @@
 import streamlit as st
 from streamlit_google_auth import Authenticate
-import os # To construct path safely
+import os
+import json # <-- Add import
 
 # --- Configuration ---
-# Determine the directory of the current script
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# Define the path to the credentials file relative to the script's directory
-CREDENTIALS_PATH = os.path.join(BASE_DIR, 'google_credentials.json')
+LOCAL_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'google_credentials.json')
+# Define path for temporary file on Streamlit Cloud (usually writable)
+CLOUD_CREDENTIALS_PATH = "/tmp/google_credentials.json"
 
-# Use Streamlit secrets for sensitive info
 COOKIE_NAME = st.secrets.get("cookie_config", {}).get("name", "my_cookie_name")
-COOKIE_KEY = st.secrets.get("cookie_config", {}).get("key", "default_secret_key") # Use a default only if secret is missing, less secure
+COOKIE_KEY = st.secrets.get("cookie_config", {}).get("key", "default_secret_key")
 COOKIE_EXPIRY_DAYS = st.secrets.get("cookie_config", {}).get("expiry_days", 30)
+REDIRECT_URI = st.secrets.get("auth_config", {}).get("redirect_uri", "http://localhost:8501") # Will be set in Cloud secrets
 
-# IMPORTANT: Replace with your actual Codespaces forwarded URL or deployed app URL
-# Use st.secrets if you plan to deploy, otherwise hardcode for testing ONLY
-REDIRECT_URI = st.secrets.get("auth_config", {}).get("redirect_uri", "http://localhost:8501")
-# Example for secrets.toml:
-# [auth_config]
-# redirect_uri = "YOUR_CODESPACES_URL_HERE"
+# Function to write secrets to a temporary JSON file for Streamlit Cloud
+def write_cloud_credentials():
+    """Reads Google credentials from st.secrets and writes them to a temporary file."""
+    creds = st.secrets.get("google_credentials")
+    if not creds:
+        st.error("Google credentials not found in Streamlit Secrets ([google_credentials] section).")
+        st.stop()
+        return None # Keep linters happy
 
-# Function to initialize the Authenticate object
+    # Construct the dictionary structure expected by the credentials file
+    credentials_content = {"web": dict(creds)} # Convert TomlTable to dict
+
+    try:
+        with open(CLOUD_CREDENTIALS_PATH, "w") as f:
+            json.dump(credentials_content, f)
+        print(f"DEBUG: Successfully wrote cloud credentials to {CLOUD_CREDENTIALS_PATH}")
+        return CLOUD_CREDENTIALS_PATH
+    except Exception as e:
+        st.error(f"Failed to write temporary credentials file: {e}")
+        st.stop()
+        return None
+
+# Updated Function to initialize the Authenticate object
 def initialize_authenticator():
-    """Initializes and returns the Authenticate object."""
-    # Check if credentials file exists
-    if not os.path.exists(CREDENTIALS_PATH):
-         st.error(f"Credentials file not found at: {CREDENTIALS_PATH}")
-         st.stop() # Stop execution if secrets file is missing
+    """Initializes and returns the Authenticate object, handling local vs cloud."""
+    credentials_path_to_use = None
+
+    # Check if running on Streamlit Cloud by checking for a specific secret key existence
+    # Alternatively, use environment variables if available and reliable
+    if "google_credentials" in st.secrets:
+        print("DEBUG: Detected Streamlit Cloud environment (found google_credentials in secrets).")
+        credentials_path_to_use = write_cloud_credentials()
+    else:
+        print("DEBUG: Detected local environment (google_credentials not found in secrets).")
+        if os.path.exists(LOCAL_CREDENTIALS_PATH):
+            credentials_path_to_use = LOCAL_CREDENTIALS_PATH
+        else:
+            st.error(f"Local credentials file not found at: {LOCAL_CREDENTIALS_PATH}")
+            st.stop() # Stop execution if local secrets file is missing
+
+    if not credentials_path_to_use:
+         st.error("Could not determine or create credentials path.")
+         st.stop() # Stop if we don't have a valid path
 
     # Check if cookie key is the default (less secure)
     if COOKIE_KEY == "default_secret_key":
         st.warning("Using default cookie key. Please set a secret key in secrets.toml for security.")
 
+    # Check if Redirect URI is placeholder (common deploy issue)
+    if not REDIRECT_URI or REDIRECT_URI == "http://localhost:8501":
+         st.warning(f"Redirect URI is not set or is default localhost ({REDIRECT_URI}). Ensure it's correctly set in Streamlit Secrets ([auth_config] -> redirect_uri) for deployment.")
+
+
     try:
+        print(f"DEBUG: Initializing Authenticate with path: {credentials_path_to_use}")
         authenticator = Authenticate(
-            secret_credentials_path=CREDENTIALS_PATH,
+            secret_credentials_path=credentials_path_to_use, # Use the determined path
             cookie_name=COOKIE_NAME,
             cookie_key=COOKIE_KEY,
             redirect_uri=REDIRECT_URI,
             cookie_expiry_days=COOKIE_EXPIRY_DAYS
         )
+        print("DEBUG: Authenticate object created successfully.")
         return authenticator
     except Exception as e:
         st.error(f"Error initializing authenticator: {e}")
-        st.stop() # Stop execution on initialization error
-        return None # Keep linters happy
+        # Optionally print args again if error persists
+        # print(f"DEBUG Args at error: path={credentials_path_to_use}, cookie={COOKIE_NAME}, key={COOKIE_KEY}, uri={REDIRECT_URI}, expiry={COOKIE_EXPIRY_DAYS}")
+        st.stop()
+        return None
 
-
+# --- Functions handle_auth_flow and handle_logout remain the same ---
+# (Ensure handle_auth_flow and handle_logout definitions are still present below)
 # Function to handle the login flow
 def handle_auth_flow(authenticator):
     """Runs the authentication check and displays the login button."""
