@@ -99,13 +99,14 @@ def handle_auth_flow(authenticator):
         if not st.session_state.get("connected"):
             # --- Create Login Link Manually ---
             try:
-                # Get the authorization URL from the library
+        if not st.session_state.get("connected"):
+            try:
                 auth_url = authenticator.get_authorization_url()
 
-                # Use st.markdown to create an HTML link with target="_top"
-                # Added basic button-like styling using inline CSS for better appearance
+                # Use st.markdown with an onclick JavaScript event
+                # We keep target="_top" as a fallback/best practice
                 st.markdown(f"""
-                <a href="{auth_url}" target="_top" style="
+                <a href="{auth_url}" target="_top" onclick="window.top.location.href='{auth_url}'; return false;" style="
                     display: inline-block;
                     padding: 0.5em 1em;
                     color: white;
